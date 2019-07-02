@@ -1,0 +1,35 @@
+options:
+  docker: true
+
+definitions:
+  steps:
+    - step: &deploy
+        name: Deploy
+        script:
+          - apt-get update && apt-get install -y python3-pip
+          - pip3 install awscli --upgrade
+          - $(aws ecr get-login --no-include-email)
+          - docker load --input img.tar
+          - docker build --tag final-img --build-arg MD5_HASHED_PASS=$MD5_HASHED_PASS --file ChangePasswordDockerfile .
+          - docker tag final-img ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/rundeck:latest
+          - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/rundeck:latest
+
+pipelines:
+  default:
+    - step:
+        name: Build docker image
+        artifacts:
+          - img.tar
+        script:
+          - docker build --tag img --file Dockerfile .
+          - docker save --output img.tar img
+    - step:
+        <<: *deploy
+        deployment: staging
+        trigger: manual
+        name: Deploy to Staging
+    - step:
+        <<: *deploy
+        deployment: live
+        trigger: manual
+        name: Deploy to Live
