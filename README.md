@@ -1,4 +1,4 @@
-#custom-rundeck
+# custom-rundeck
 
 This is a modified version of the [official Rundeck Docker image](https://hub.docker.com/r/rundeck/rundeck/)
 which adds AWS CLI and custom scripts, and removes the default user and changes the default admin password.
